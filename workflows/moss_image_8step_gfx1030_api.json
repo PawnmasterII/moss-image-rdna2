@@ -1,0 +1,13 @@
+{
+  "_comment": "MOSS-Image text-to-image for RDNA2/gfx1030 (RX 6000-series) on Windows ComfyUI. 8-step DMD LoRA, ~10-40 s per 512px image on an RX 6950 XT. POST this JSON to http://127.0.0.1:8188/prompt, or rebuild the 8 nodes in the UI per README. NOTE: deliberately NO ModelSamplingSD3 node - MOSS bakes its shift into the model config; adding that node rescales timesteps x1000 and outputs pure noise.",
+  "1": {"class_type": "UNETLoader", "inputs": {"unet_name": "moss_image_sft_bf16.safetensors", "weight_dtype": "default"}},
+  "2": {"class_type": "LoraLoaderModelOnly", "inputs": {"model": ["1", 0], "lora_name": "moss_image_sft_8steps_dmd.safetensors", "strength_model": 1.0}},
+  "4": {"class_type": "CLIPLoader", "inputs": {"clip_name": "qwen3.5_9b_bf16.safetensors", "type": "moss_image"}},
+  "5": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["4", 0], "text": "A shop window sticker that reads \"OPEN 7 DAYS\", white vinyl on glass, street reflections"}},
+  "6": {"class_type": "CLIPTextEncode", "inputs": {"clip": ["4", 0], "text": ""}},
+  "7": {"class_type": "EmptyFlux2LatentImage", "inputs": {"width": 1024, "height": 1024, "batch_size": 1}},
+  "8": {"class_type": "KSampler", "inputs": {"model": ["2", 0], "seed": 42, "steps": 8, "cfg": 1.0, "sampler_name": "euler", "scheduler": "simple", "positive": ["5", 0], "negative": ["6", 0], "latent_image": ["7", 0], "denoise": 1.0}},
+  "9": {"class_type": "VAEDecode", "inputs": {"samples": ["8", 0], "vae": ["10", 0]}},
+  "10": {"class_type": "VAELoader", "inputs": {"vae_name": "flux2-vae_small.safetensors"}},
+  "11": {"class_type": "SaveImage", "inputs": {"images": ["9", 0], "filename_prefix": "moss_gfx1030"}}
+}
